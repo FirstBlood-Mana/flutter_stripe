@@ -212,7 +212,7 @@ class StripeSdkModule(val reactContext: ReactApplicationContext) : ReactContextB
   }
 
   @ReactMethod
-  fun intentCreationCallback(params: ReadableMap, promise: Promise) {
+  fun intentCreationCallback(params: JSONObject, promise: Promise) {
     if (paymentSheetFragment == null) {
       promise.resolve(PaymentSheetFragment.createMissingInitError())
       return

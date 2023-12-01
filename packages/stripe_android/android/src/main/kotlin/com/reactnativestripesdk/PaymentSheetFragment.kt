@@ -27,6 +27,7 @@ import com.stripe.android.paymentsheet.*
 import kotlinx.coroutines.CompletableDeferred
 import java.io.ByteArrayOutputStream
 import kotlin.Exception
+import org.json.JSONObject
 
 class PaymentSheetFragment(
   private val context: ReactApplicationContext,
@@ -41,7 +42,7 @@ class PaymentSheetFragment(
   private var confirmPromise: Promise? = null
   private var presentPromise: Promise? = null
   private var paymentSheetTimedOut = false
-  internal val paymentSheetIntentCreationCallback = CompletableDeferred<ReadableMap>()
+  internal val paymentSheetIntentCreationCallback = CompletableDeferred<JSONObject>()
 
   override fun onCreateView(
     inflater: LayoutInflater,
@@ -145,15 +146,17 @@ class PaymentSheetFragment(
 
       val resultFromJavascript = paymentSheetIntentCreationCallback.await()
 
-      return@CreateIntentCallback resultFromJavascript.getString("clientSecret")?.let {
-        CreateIntentResult.Success(clientSecret = it)
-      } ?: run {
-        val errorMap = resultFromJavascript.getMap("error")
-        CreateIntentResult.Failure(
+      if (resultFromJavascript.isNull("clientSecret")) {
+        val exp = resultFromJavascript.getJSONObject("error")
+        val errorMap = exp.getJSONObject("error")
+        return@CreateIntentCallback CreateIntentResult.Failure(
           cause = Exception(errorMap?.getString("message")),
           displayMessage = errorMap?.getString("localizedMessage")
         )
       }
+
+      val secret = resultFromJavascript.getString("clientSecret")
+      return@CreateIntentCallback CreateIntentResult.Success(clientSecret = secret)
     }
 
     val billingDetailsConfig = PaymentSheet.BillingDetailsCollectionConfiguration(

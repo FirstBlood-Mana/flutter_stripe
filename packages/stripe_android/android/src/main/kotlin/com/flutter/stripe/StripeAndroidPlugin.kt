@@ -8,6 +8,8 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.DisplayMetricsHolder
 import com.facebook.react.uimanager.ThemedReactContext
 import com.google.android.material.internal.ThemeEnforcement
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 import com.reactnativestripesdk.*
 import com.reactnativestripesdk.pushprovisioning.AddToWalletButtonManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -309,6 +311,10 @@ private inline fun <reified T> MethodCall.optionalArgument(key: String): T? {
 }
 
 private inline fun <reified T> MethodCall.requiredArgument(key: String): T {
+    if (T::class.java == JSONObject::class.java) {
+        val arg = argument<JSONObject>(key);
+        return argument<JSONObject>(key) as T
+    }
     if (T::class.java == ReadableMap::class.java) {
         return ReadableMap(argument<JSONObject>(key) ?: error("Required parameter $key not set")) as T
     }
